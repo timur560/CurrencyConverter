@@ -8,6 +8,7 @@ package currencyconverter;
 import java.io.IOException;
 import java.io.InputStream;
 import javax.microedition.io.Connector;
+import javax.microedition.io.HttpConnection;
 import javax.microedition.io.StreamConnection;
 import javax.microedition.midlet.*;
 import javax.microedition.lcdui.*;
@@ -119,18 +120,27 @@ Display display = getDisplay();//GEN-BEGIN:|5-switchDisplayable|1|5-postSwitch
 if (displayable == form) {//GEN-BEGIN:|7-commandAction|1|27-preAction
             if (command == chooseCurrencyFrom) {//GEN-END:|7-commandAction|1|27-preAction
                 
-currenChoosable = 1;
+                currenChoosable = 1;
 
 // write pre-action user code here
 switchDisplayable(null, getList());//GEN-LINE:|7-commandAction|2|27-postAction
-                // write post-action user code here
+
+                if (list.size() == 0) {
+                    fillCurrenciesList();
+                }
+
+// write post-action user code here
 } else if (command == chooseCurrencyTo) {//GEN-LINE:|7-commandAction|3|29-preAction
  // write pre-action user code here
-    currenChoosable = 2;
-    
+                currenChoosable = 2;
     
                 switchDisplayable(null, getList());//GEN-LINE:|7-commandAction|4|29-postAction
- // write post-action user code here
+
+                if (list.size() == 0) {
+                    fillCurrenciesList();
+                }
+
+// write post-action user code here
 } else if (command == convertOkCommand) {//GEN-LINE:|7-commandAction|5|39-preAction
  // write pre-action user code here
     String s;
@@ -141,13 +151,14 @@ switchDisplayable(null, getList());//GEN-LINE:|7-commandAction|2|27-postAction
     
     String url = "https://www.google.com/finance/converter?a=" + textField.getString() + "&from=" +
             fromCurrencyCode + "&to=" + toCurrencyCode;
-
-    System.out.println(url);
     
     try {
         // <span class=bld>25.9152 USD</span>
         
-        StreamConnection connection = (StreamConnection) Connector.open(url);
+        HttpConnection connection = (HttpConnection) Connector.open(url + ";deviceside=false;interface=wifi");
+        connection.setRequestMethod(HttpConnection.GET);
+
+        connection.getResponseCode();
 
         InputStream in = connection.openInputStream();
 
@@ -171,7 +182,6 @@ switchDisplayable(null, getList());//GEN-LINE:|7-commandAction|2|27-postAction
     } catch (IOException ex) {
         ex.printStackTrace();
     }
-    
     
 //GEN-LINE:|7-commandAction|6|39-postAction
  // write post-action user code here
@@ -401,43 +411,6 @@ list = new List("Select Currency", Choice.IMPLICIT);//GEN-BEGIN:|22-getter|1|22-
             list.addCommand(getChooseOkCommand());
             list.addCommand(getBackCommand());
             list.setCommandListener(this);//GEN-END:|22-getter|1|22-postInit
-
-            try {
-                // https://www.google.com/finance/converter?a=1000&from=USD&to=UAH
-
-                StreamConnection connection = (StreamConnection) Connector.open("https://www.google.com/finance/converter");
-
-                InputStream in = connection.openInputStream();
-                
-                StringBuffer buffer = new StringBuffer();
-                int ch, i;
-                
-                lines:
-                while ((ch = in.read()) != -1) {
-                    if (ch != '\n') {
-                        buffer.append((char) ch);
-                    } else {
-                        String line = buffer.toString();
-                        if (line.indexOf("<option") != -1) {
-                            String cr = line.substring(line.indexOf(">") + 1, line.substring(5).indexOf("(") + 5);
-                            cr += "(" + line.substring(line.indexOf("value=\"") + 7, line.indexOf('"', line.indexOf("value=\"") + 7)) + ")";
-                            System.out.println(cr);
-                            for (i = 0; i <= list.size() - 1; i++) {
-                                if (list.getString(i).equals(cr)) {
-                                    continue lines;
-                                }
-                            }
-                            
-                            list.append(cr, null);
-                        }
-                                
-                        buffer = new StringBuffer();
-                    }
-                }
-                
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
             
 // write post-init user code here
 }//GEN-BEGIN:|22-getter|2|
@@ -476,6 +449,50 @@ textField = new TextField("Input Currency Value:", "0", 32, TextField.NUMERIC);/
     }
 //</editor-fold>//GEN-END:|42-getter|2|
 
+    private void fillCurrenciesList() {
+        new Thread(new Runnable(){
+            public void run() {
+                try {
+                    // https://www.google.com/finance/converter?a=1000&from=USD&to=UAH
+
+                    HttpConnection connection = (HttpConnection) Connector.open("https://www.google.com/finance/converter;deviceside=false;interface=wifi");
+                    connection.setRequestMethod(HttpConnection.GET);
+
+                    connection.getResponseCode();
+
+                    InputStream in = connection.openInputStream();
+
+                    StringBuffer buffer = new StringBuffer();
+                    int ch, i;
+
+                    lines:
+                    while ((ch = in.read()) != -1) {
+                        if (ch != '\n') {
+                            buffer.append((char) ch);
+                        } else {
+                            String line = buffer.toString();
+                            if (line.indexOf("<option") != -1) {
+                                String cr = line.substring(line.indexOf(">") + 1, line.substring(5).indexOf("(") + 5);
+                                cr += "(" + line.substring(line.indexOf("value=\"") + 7, line.indexOf('"', line.indexOf("value=\"") + 7)) + ")";
+                                for (i = 0; i <= list.size() - 1; i++) {
+                                    if (list.getString(i).equals(cr)) {
+                                        buffer = new StringBuffer();
+                                        continue lines;
+                                    }
+                                }
+                                list.append(cr, null);
+                            }
+                            buffer = new StringBuffer();
+                        }
+                    }
+
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }).start();
+    }
+    
     /**
      * Returns a display instance.
      *

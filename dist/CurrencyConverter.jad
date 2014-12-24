@@ -1,5 +1,5 @@
 MIDlet-1: Currency Converter,/images/icon.png,currencyconverter.CurrencyConverter
-MIDlet-Jar-Size: 7064
+MIDlet-Jar-Size: 8378
 MIDlet-Jar-URL: CurrencyConverter.jar
 MIDlet-Name: CurrencyConverter
 MIDlet-Vendor: timur560
