@@ -1,8 +1,8 @@
-MIDlet-1: HelloMIDlet, ,currencyconverter.CurrencyConverter
-MIDlet-Jar-Size: 4691
+MIDlet-1: Currency Converter,/images/icon.png,currencyconverter.CurrencyConverter
+MIDlet-Jar-Size: 7064
 MIDlet-Jar-URL: CurrencyConverter.jar
 MIDlet-Name: CurrencyConverter
-MIDlet-Vendor: Vendor
+MIDlet-Vendor: timur560
 MIDlet-Version: 1.0
 MicroEdition-Configuration: CLDC-1.1
 MicroEdition-Profile: MIDP-2.0
