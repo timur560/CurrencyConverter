@@ -29,6 +29,7 @@ public class CurrencyConverter extends MIDlet implements CommandListener {
     private Command chooseOkCommand;
     private Command backCommand;
     private Command convertOkCommand;
+    private Command showCurrenciesItemCommand;
     private Form form;
     private StringItem stringItem;
     private StringItem stringItem1;
@@ -117,6 +118,10 @@ Display display = getDisplay();//GEN-BEGIN:|5-switchDisplayable|1|5-postSwitch
     public void commandAction(Command command, Displayable displayable) {
 //GEN-END:|7-commandAction|0|7-preCommandAction
         // write pre-action user code here
+if (command == backToFormCommand) {
+    switchDisplayable(null, getForm());
+}
+
 if (displayable == form) {//GEN-BEGIN:|7-commandAction|1|27-preAction
             if (command == chooseCurrencyFrom) {//GEN-END:|7-commandAction|1|27-preAction
                 
@@ -143,63 +148,38 @@ switchDisplayable(null, getList());//GEN-LINE:|7-commandAction|2|27-postAction
 // write post-action user code here
 } else if (command == convertOkCommand) {//GEN-LINE:|7-commandAction|5|39-preAction
  // write pre-action user code here
-    String s;
-    s = stringItem1.getText();
-    String fromCurrencyCode = s.substring(s.indexOf("(") + 1, s.indexOf("(") + 4);
-    s = stringItem2.getText();
-    String toCurrencyCode = s.substring(s.indexOf("(") + 1, s.indexOf("(") + 4);
-    
-    String url = "https://www.google.com/finance/converter?a=" + textField.getString() + "&from=" +
-            fromCurrencyCode + "&to=" + toCurrencyCode;
-    
-    try {
-        // <span class=bld>25.9152 USD</span>
-        
-        HttpConnection connection = (HttpConnection) Connector.open(url + ";deviceside=false;interface=wifi");
-        connection.setRequestMethod(HttpConnection.GET);
-
-        connection.getResponseCode();
-
-        InputStream in = connection.openInputStream();
-
-        StringBuffer buffer = new StringBuffer();
-        int ch;
-
-        while ((ch = in.read()) != -1) {
-            if (ch != '\n') {
-                buffer.append((char) ch);
-            } else {
-                String line = buffer.toString();
-                if (line.indexOf("bld>") != -1) {
-                    String result = line.substring(line.indexOf("bld>") + 4, line.indexOf("</span"));
-                    stringItem.setText(result);
-                }
-
-                buffer = new StringBuffer();
-            }
+    new Thread(new Runnable(){
+        public void run() {
+            String s;
+            s = stringItem1.getText();
+            String fromCurrencyCode = s.substring(s.indexOf("(") + 1, s.indexOf("(") + 4);
+            s = stringItem2.getText();
+            String toCurrencyCode = s.substring(s.indexOf("(") + 1, s.indexOf("(") + 4);
+            stringItem.setText(getConvertedValue(fromCurrencyCode, toCurrencyCode, textField.getString(), true));
         }
-
-    } catch (IOException ex) {
-        ex.printStackTrace();
-    }
-    
+    }).start();
 //GEN-LINE:|7-commandAction|6|39-postAction
  // write post-action user code here
 } else if (command == exitCommand) {//GEN-LINE:|7-commandAction|7|19-preAction
                 // write pre-action user code here
 exitMIDlet();//GEN-LINE:|7-commandAction|8|19-postAction
                 // write post-action user code here
-}//GEN-BEGIN:|7-commandAction|9|24-preAction
+} else if (command == showCurrenciesItemCommand) {//GEN-LINE:|7-commandAction|9|44-preAction
+ // write pre-action user code here
+    switchDisplayable(null, getCurrenciesGraph());
+//GEN-LINE:|7-commandAction|10|44-postAction
+ // write post-action user code here
+}//GEN-BEGIN:|7-commandAction|11|24-preAction
 } else if (displayable == list) {
-    if (command == List.SELECT_COMMAND) {//GEN-END:|7-commandAction|9|24-preAction
+    if (command == List.SELECT_COMMAND) {//GEN-END:|7-commandAction|11|24-preAction
  // write pre-action user code here
-listAction();//GEN-LINE:|7-commandAction|10|24-postAction
+listAction();//GEN-LINE:|7-commandAction|12|24-postAction
  // write post-action user code here
-} else if (command == backCommand) {//GEN-LINE:|7-commandAction|11|35-preAction
+} else if (command == backCommand) {//GEN-LINE:|7-commandAction|13|35-preAction
  // write pre-action user code here
-switchDisplayable(null, getForm());//GEN-LINE:|7-commandAction|12|35-postAction
+switchDisplayable(null, getForm());//GEN-LINE:|7-commandAction|14|35-postAction
  // write post-action user code here
-} else if (command == chooseOkCommand) {//GEN-LINE:|7-commandAction|13|32-preAction
+} else if (command == chooseOkCommand) {//GEN-LINE:|7-commandAction|15|32-preAction
  // write pre-action user code here
     
     switch (currenChoosable) {
@@ -211,13 +191,13 @@ switchDisplayable(null, getForm());//GEN-LINE:|7-commandAction|12|35-postAction
             break;
     }
     
-        switchDisplayable(null, getForm());//GEN-LINE:|7-commandAction|14|32-postAction
+        switchDisplayable(null, getForm());//GEN-LINE:|7-commandAction|16|32-postAction
  // write post-action user code here
-}//GEN-BEGIN:|7-commandAction|15|7-postCommandAction
-        }//GEN-END:|7-commandAction|15|7-postCommandAction
+}//GEN-BEGIN:|7-commandAction|17|7-postCommandAction
+        }//GEN-END:|7-commandAction|17|7-postCommandAction
         // write post-action user code here
-}//GEN-BEGIN:|7-commandAction|16|
-//</editor-fold>//GEN-END:|7-commandAction|16|
+}//GEN-BEGIN:|7-commandAction|18|
+//</editor-fold>//GEN-END:|7-commandAction|18|
 
 //<editor-fold defaultstate="collapsed" desc=" Generated Getter: exitCommand ">//GEN-BEGIN:|18-getter|0|18-preInit
     /**
@@ -251,6 +231,7 @@ form = new Form("Currency Converter", new Item[]{getStringItem1(), getStringItem
             form.addCommand(getChooseCurrencyFrom());
             form.addCommand(getChooseCurrencyTo());
             form.addCommand(getConvertOkCommand());
+            form.addCommand(getShowCurrenciesItemCommand());
             form.setCommandListener(this);//GEN-END:|14-getter|1|14-postInit
             // write post-init user code here
 }//GEN-BEGIN:|14-getter|2|
@@ -449,6 +430,145 @@ textField = new TextField("Input Currency Value:", "0", 32, TextField.NUMERIC);/
     }
 //</editor-fold>//GEN-END:|42-getter|2|
 
+//<editor-fold defaultstate="collapsed" desc=" Generated Getter: showCurrenciesItemCommand ">//GEN-BEGIN:|43-getter|0|43-preInit
+    /**
+     * Returns an initialized instance of showCurrenciesItemCommand component.
+     *
+     * @return the initialized component instance
+     */
+    public Command getShowCurrenciesItemCommand() {
+        if (showCurrenciesItemCommand == null) {
+//GEN-END:|43-getter|0|43-preInit
+ // write pre-init user code here
+showCurrenciesItemCommand = new Command("Main Currencies Graph", "Main Currencies Graph", Command.ITEM, 0);//GEN-LINE:|43-getter|1|43-postInit
+ // write post-init user code here
+}//GEN-BEGIN:|43-getter|2|
+        return showCurrenciesItemCommand;
+    }
+//</editor-fold>//GEN-END:|43-getter|2|
+
+    private CurrenciesGraph currenciesGraph = null;
+    private Command backToFormCommand;
+    
+    public CurrenciesGraph getCurrenciesGraph() {
+        if (currenciesGraph == null) {
+            currenciesGraph = new CurrenciesGraph();
+            backToFormCommand = new Command("Back", Command.BACK, 0);
+            currenciesGraph.addCommand(backToFormCommand);
+            currenciesGraph.setCommandListener(this);
+        }
+        
+        return currenciesGraph;
+    }
+
+    public float[] rates = null;
+
+    class CurrenciesGraph extends Canvas {
+        private int screenWidth;
+        private int screenHeight;
+        
+        protected void paint(final Graphics g) {
+            screenWidth = getWidth();
+            screenHeight = getHeight();
+
+            // clear screen
+            g.setColor(0xFFFFFF);
+            g.fillRect(0, 0, screenWidth, screenHeight);
+            
+            final String[] codes = {"GBP", "EUR", "USD", "CAD", "AUD", "NZD", "PLN", "CNY", "CZK", "RUB", "JPY"};
+            // czech republic koruna, polish zloty, new zeland dollar, canadian dollar,
+            // australian dollar, japanese yen, chinese yuan, british pound sterling
+            final int[] colors = {0xFFFF88, 0xCDEB8B, 0xC3D9FF, 0xc9b77a, 0xf68a5f, 
+                0xeed4b3, 0xd3d1cc, 0xe1d0b5, 0xE1C61E, 0xb9c1b6, 0xffad5b};
+          
+            float k = (float) screenWidth / 30.0f;
+            final int rowHeight = screenHeight / 11;
+            int i;
+            
+            if (rates == null) {
+                rates = new float[11];
+                for (i = 0; i <= 10; i++) {
+                    rates[i] = 0;
+                }
+                
+                for (i = 0; i <= 10; i++) {
+                    new Thread(new GraphRunnable(codes[i], i)).start();
+                }
+            } else {
+                for (i = 0; i <= 10; i++) {
+                    g.setColor(colors[i]);
+                    g.fillRect(0, rowHeight * i, (int) (k * rates[i]), rowHeight);
+                    g.setColor(0x0);
+                    g.drawString(
+                            codes[i] + ": " + rates[i], 
+                            5, rowHeight * i + rowHeight / 3, Graphics.TOP | Graphics.LEFT);
+                }
+                
+            }
+        }
+        
+    }
+    
+    class GraphRunnable implements Runnable {
+        private String code;
+        private final int i;
+
+        public GraphRunnable(String code, int i) {
+            this.code = code;
+            this.i = i;
+        }
+
+        public void run() {
+            rates[i] = Float.parseFloat(getConvertedValue(code, "UAH", "1", false));
+            currenciesGraph.repaint();
+        }
+    }        
+    
+    private String getConvertedValue(String from, String to, String amount, boolean withCode) {
+        String url = "https://www.google.com/finance/converter?a=" + amount + "&from=" +
+                from + "&to=" + to + ";deviceside=false;interface=wifi";
+
+        System.out.println(url);
+        
+        String result = "";
+        
+        try {
+            // <span class=bld>25.9152 USD</span>
+
+            HttpConnection connection = (HttpConnection) Connector.open(url);
+            connection.setRequestMethod(HttpConnection.GET);
+
+            connection.getResponseCode();
+
+            InputStream in = connection.openInputStream();
+
+            StringBuffer buffer = new StringBuffer();
+            int ch;
+
+            while ((ch = in.read()) != -1) {
+                if (ch != '\n') {
+                    buffer.append((char) ch);
+                } else {
+                    String line = buffer.toString();
+                    if (line.indexOf("bld>") != -1) {
+                        if (withCode) {
+                            result = line.substring(line.indexOf("bld>") + 4, line.indexOf("</span"));
+                        } else {
+                            result = line.substring(line.indexOf("bld>") + 4, line.indexOf("</span") - 4);
+                        }
+                    }
+
+                    buffer = new StringBuffer();
+                }
+            }
+
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        
+        return result;
+    }
+    
     private void fillCurrenciesList() {
         new Thread(new Runnable(){
             public void run() {
